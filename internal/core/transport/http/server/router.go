@@ -3,6 +3,8 @@ package core_http_server
 import (
 	"fmt"
 	"net/http"
+
+	core_http_middleware "github.com/Lockok/golang-niltodo/internal/core/transport/http/middleware"
 )
 
 type ApiVersion string
@@ -16,9 +18,10 @@ var (
 type APIversionRouter struct {
 	*http.ServeMux
 	apiVersion ApiVersion
+	middleware []core_http_middleware.Middleware
 }
 
-func NewAPIVersionRouter(apiVersion ApiVersion)  *APIversionRouter{
+func NewAPIVersionRouter(apiVersion ApiVersion, middleware ...core_http_middleware.Middleware)  *APIversionRouter{
 	return &APIversionRouter{
 		ServeMux: http.NewServeMux(),
 		apiVersion: apiVersion,
@@ -29,6 +32,10 @@ func (r *APIversionRouter) RegisterRoutes(routes ...Route) {
 	for _, route := range routes {
 		pattern := fmt.Sprintf("%s %s", route.Method, route.Path)
 
-		r.Handle(pattern, route.Handler)
+		r.Handle(pattern, route.WithMiddleware())
 	}
+}
+
+func (r *APIversionRouter) WithMiddleware() http.Handler {
+	return core_http_middleware.ChainMiddleware(r, r.middleware...)
 }

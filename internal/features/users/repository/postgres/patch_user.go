@@ -7,7 +7,7 @@ import (
 
 	"github.com/Lockok/golang-niltodo/internal/core/domain"
 	core_errors "github.com/Lockok/golang-niltodo/internal/core/errors"
-	"github.com/jackc/pgx/v5"
+	core_postgres_pool "github.com/Lockok/golang-niltodo/internal/core/repository/postgres/pool"
 )
 
 func (r *UsersRepository) PatchUser(ctx context.Context, id int, user domain.User) (domain.User, error) {
@@ -21,7 +21,7 @@ func (r *UsersRepository) PatchUser(ctx context.Context, id int, user domain.Use
 	var userModel UserModel
 	err := row.Scan(&userModel.ID, &userModel.Version, &userModel.FullName, &userModel.PhoneNumber)
 	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
+		if errors.Is(err, core_postgres_pool.ErrNoRows) {
 			return domain.User{}, fmt.Errorf("user with id='%d' concurrently accessed: %w", id, core_errors.ErrConflict)
 		}
 		return domain.User{}, fmt.Errorf("scan error: %w", err)
