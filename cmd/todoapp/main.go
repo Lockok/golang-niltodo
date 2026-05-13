@@ -22,6 +22,9 @@ import (
 	users_postgres_repository "github.com/Lockok/golang-niltodo/internal/features/users/repository/postgres"
 	users_service "github.com/Lockok/golang-niltodo/internal/features/users/service"
 	users_transport_http "github.com/Lockok/golang-niltodo/internal/features/users/transport/http"
+	web_fs_repository "github.com/Lockok/golang-niltodo/internal/features/web/repository/file_system"
+	web_service "github.com/Lockok/golang-niltodo/internal/features/web/service"
+	web_transport_http "github.com/Lockok/golang-niltodo/internal/features/web/transport/http"
 	"go.uber.org/zap"
 
 	_ "github.com/Lockok/golang-niltodo/docs"
@@ -73,6 +76,11 @@ func main() {
 	statisticsService := statistics_service.NewStatisticsService(statisticsRepository)
 	statisticsTransportHTTP := statistics_transport_http.NewStatisticsHTTPHandler(statisticsService)
 
+	logger.Debug("initializing feature", zap.String("feature", "web"))
+	webRepository := web_fs_repository.NewWebRepository()
+	webService := web_service.NewWebService(webRepository)
+	webTransportHTTP := web_transport_http.NewWebHTTPHandler(webService)
+
 	logger.Debug("initializng HTTP server")
 	httpServer := core_http_server.NewHTTPServer(core_http_server.NewConfigMust(), logger, core_http_middleware.CORS(),core_http_middleware.RequestID(), core_http_middleware.Logger(logger), core_http_middleware.Trace(), core_http_middleware.Panic())
 
@@ -84,10 +92,12 @@ func main() {
 	// apiVersionRouterV2 := core_http_server.NewAPIVersionRouter(core_http_server.ApiVersion2, core_http_middleware.Dummy("api v2 middleware"))
 	// apiVersionRouterV2.RegisterRoutes(usersTransportHTTP.Routes()...)
 
+
 	httpServer.RegisterAPIRouters(
 		apiVersionRouterV1, 
 		// apiVersionRouterV2,
 	)
+	httpServer.RegisterRoutes(webTransportHTTP.Routes()...)
 
 	httpServer.RegisterSwagger()
 
