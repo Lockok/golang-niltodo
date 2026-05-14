@@ -1,11 +1,1877 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Nil Todo</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0d1117;
+      --bg-2: #111827;
+      --bg-3: #161b22;
+      --card: rgba(28, 35, 51, .82);
+      --card-2: rgba(32, 41, 56, .86);
+      --card-3: rgba(22, 27, 34, .72);
+      --line: rgba(255, 255, 255, .08);
+      --line-strong: rgba(255, 255, 255, .14);
+      --text: #f3f4f6;
+      --muted: #9ca3af;
+      --faint: #64748b;
+      --accent: #7c5cff;
+      --accent-2: #5b8cff;
+      --accent-3: #6ee7ff;
+      --success: #22c55e;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --shadow: 0 24px 80px rgba(0, 0, 0, .34);
+      --shadow-soft: 0 18px 48px rgba(0, 0, 0, .22);
+      --radius-sm: 14px;
+      --radius: 18px;
+      --radius-lg: 24px;
+      --ease: cubic-bezier(.2, .8, .2, 1);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 12% -8%, rgba(124, 92, 255, .28), transparent 34%),
+        radial-gradient(circle at 86% 2%, rgba(110, 231, 255, .16), transparent 30%),
+        linear-gradient(135deg, var(--bg), var(--bg-2) 48%, var(--bg-3));
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image:
+        linear-gradient(rgba(255, 255, 255, .025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, .02) 1px, transparent 1px);
+      background-size: 52px 52px;
+      mask-image: linear-gradient(to bottom, rgba(0, 0, 0, .9), rgba(0, 0, 0, .14));
+    }
+
+    button,
+    input,
+    textarea,
+    select {
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    .app {
+      position: relative;
+      display: grid;
+      grid-template-columns: 288px minmax(0, 1fr);
+      gap: 24px;
+      min-height: 100vh;
+      padding: 24px;
+    }
+
+    .sidebar {
+      position: sticky;
+      top: 24px;
+      height: calc(100vh - 48px);
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      background: linear-gradient(180deg, rgba(28, 35, 51, .74), rgba(17, 24, 39, .58));
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(24px);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .sidebar::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      border-radius: inherit;
+      background: linear-gradient(145deg, rgba(255, 255, 255, .13), transparent 28%, transparent 72%, rgba(124, 92, 255, .12));
+      mask: linear-gradient(#000, transparent 60%);
+    }
+
+    .brand {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px;
+      margin-bottom: 18px;
+    }
+
+    .logo {
+      width: 42px;
+      height: 42px;
+      border-radius: 15px;
+      display: grid;
+      place-items: center;
+      color: white;
+      font-weight: 900;
+      letter-spacing: 0;
+      background:
+        linear-gradient(135deg, rgba(124, 92, 255, .95), rgba(91, 140, 255, .9) 56%, rgba(110, 231, 255, .82));
+      box-shadow: 0 0 34px rgba(124, 92, 255, .36);
+    }
+
+    .brand strong,
+    .profile strong,
+    .task-title,
+    .metric-value {
+      letter-spacing: 0;
+    }
+
+    .brand strong {
+      display: block;
+      font-size: 18px;
+    }
+
+    .eyebrow,
+    .muted {
+      color: var(--muted);
+    }
+
+    .eyebrow {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    .nav {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      gap: 8px;
+      margin: 12px 0;
+    }
+
+    .nav button,
+    .tab,
+    .ghost,
+    .icon-btn {
+      min-height: 42px;
+      border: 1px solid transparent;
+      border-radius: var(--radius-sm);
+      background: transparent;
+      color: var(--muted);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 0 13px;
+      transition: transform .22s var(--ease), border-color .22s var(--ease), background .22s var(--ease), color .22s var(--ease), box-shadow .22s var(--ease);
+    }
+
+    .nav button {
+      justify-content: flex-start;
+      width: 100%;
+      position: relative;
+    }
+
+    .nav button:hover,
+    .tab:hover,
+    .ghost:hover,
+    .icon-btn:hover {
+      color: var(--text);
+      background: rgba(255, 255, 255, .055);
+      border-color: var(--line);
+    }
+
+    .nav button.active,
+    .tab.active {
+      color: white;
+      background: linear-gradient(135deg, rgba(124, 92, 255, .26), rgba(91, 140, 255, .12));
+      border-color: rgba(124, 92, 255, .34);
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .025), 0 14px 34px rgba(0, 0, 0, .18);
+    }
+
+    .nav button.active::before {
+      content: "";
+      width: 4px;
+      height: 22px;
+      border-radius: 999px;
+      background: linear-gradient(var(--accent-3), var(--accent));
+      box-shadow: 0 0 18px rgba(110, 231, 255, .55);
+      position: absolute;
+      left: -2px;
+    }
+
+    .nav svg,
+    .toolbar svg {
+      width: 18px;
+      height: 18px;
+      flex: 0 0 auto;
+    }
+
+    .sidebar-card {
+      position: relative;
+      z-index: 1;
+      margin-top: 14px;
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(13, 17, 23, .42);
+    }
+
+    .side-progress {
+      height: 8px;
+      border-radius: 999px;
+      margin-top: 14px;
+      overflow: hidden;
+      background: rgba(255, 255, 255, .07);
+    }
+
+    .side-progress span {
+      display: block;
+      height: 100%;
+      width: 0%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--accent), var(--accent-3));
+      box-shadow: 0 0 22px rgba(110, 231, 255, .42);
+      transition: width .7s var(--ease);
+    }
+
+    .profile-switcher {
+      position: relative;
+      z-index: 1;
+      margin-top: auto;
+    }
+
+    .profile {
+      width: 100%;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: linear-gradient(145deg, rgba(255, 255, 255, .07), rgba(255, 255, 255, .03));
+      display: grid;
+      grid-template-columns: 42px minmax(0, 1fr);
+      gap: 12px;
+      align-items: center;
+      color: inherit;
+      text-align: left;
+      transition: transform .22s var(--ease), border-color .22s var(--ease), background .22s var(--ease), box-shadow .22s var(--ease);
+    }
+
+    .profile:hover,
+    .profile[aria-expanded="true"] {
+      transform: translateY(-2px);
+      border-color: rgba(110, 231, 255, .26);
+      background: linear-gradient(145deg, rgba(255, 255, 255, .095), rgba(255, 255, 255, .04));
+      box-shadow: 0 18px 42px rgba(0, 0, 0, .18), 0 0 26px rgba(110, 231, 255, .08);
+    }
+
+    .avatar {
+      width: 42px;
+      height: 42px;
+      border-radius: 15px;
+      display: grid;
+      place-items: center;
+      background: rgba(110, 231, 255, .12);
+      border: 1px solid rgba(110, 231, 255, .24);
+      color: var(--accent-3);
+      font-weight: 800;
+    }
+
+    .profile strong,
+    .profile span {
+      display: block;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .profile-copy {
+      min-width: 0;
+      display: grid;
+      gap: 3px;
+    }
+
+    .profile-copy::after {
+      content: "Switch user";
+      color: var(--accent-3);
+      font-size: 11px;
+      opacity: 0;
+      transform: translateY(-2px);
+      transition: opacity .2s var(--ease), transform .2s var(--ease);
+    }
+
+    .profile:hover .profile-copy::after,
+    .profile[aria-expanded="true"] .profile-copy::after {
+      opacity: .9;
+      transform: translateY(0);
+    }
+
+    .user-menu {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: calc(100% + 10px);
+      display: grid;
+      gap: 6px;
+      max-height: 312px;
+      overflow: auto;
+      padding: 8px;
+      border: 1px solid rgba(255, 255, 255, .12);
+      border-radius: var(--radius);
+      background: rgba(13, 17, 23, .92);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(20px);
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(10px) scale(.98);
+      transform-origin: bottom;
+      transition: opacity .2s var(--ease), transform .2s var(--ease);
+    }
+
+    .user-menu.open {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateY(0) scale(1);
+    }
+
+    .user-menu-empty {
+      padding: 14px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+      text-align: center;
+    }
+
+    .switch-user {
+      width: 100%;
+      min-height: 54px;
+      border: 1px solid transparent;
+      border-radius: var(--radius-sm);
+      background: transparent;
+      color: var(--text);
+      display: grid;
+      grid-template-columns: 34px minmax(0, 1fr);
+      gap: 10px;
+      align-items: center;
+      padding: 8px;
+      text-align: left;
+      transition: background .2s var(--ease), border-color .2s var(--ease), transform .2s var(--ease);
+    }
+
+    .switch-user:hover {
+      transform: translateY(-1px);
+      border-color: rgba(110, 231, 255, .2);
+      background: rgba(255, 255, 255, .06);
+    }
+
+    .switch-user.active {
+      border-color: rgba(124, 92, 255, .42);
+      background: linear-gradient(135deg, rgba(124, 92, 255, .18), rgba(91, 140, 255, .08));
+    }
+
+    .switch-user-avatar {
+      width: 34px;
+      height: 34px;
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      color: var(--accent-3);
+      background: rgba(110, 231, 255, .1);
+      border: 1px solid rgba(110, 231, 255, .2);
+      font-weight: 800;
+    }
+
+    .switch-user strong,
+    .switch-user span {
+      display: block;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .switch-user span {
+      margin-top: 2px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .main {
+      min-width: 0;
+      display: grid;
+      gap: 22px;
+      align-content: start;
+    }
+
+    .hero {
+      position: relative;
+      overflow: hidden;
+      min-height: 198px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      padding: 28px;
+      background:
+        radial-gradient(circle at 78% 12%, rgba(110, 231, 255, .22), transparent 30%),
+        radial-gradient(circle at 56% 108%, rgba(124, 92, 255, .32), transparent 36%),
+        linear-gradient(145deg, rgba(28, 35, 51, .88), rgba(17, 24, 39, .72));
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(20px);
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 18px;
+      align-items: start;
+    }
+
+    .hero::after {
+      content: "";
+      position: absolute;
+      right: 26px;
+      bottom: -68px;
+      width: 280px;
+      height: 180px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, rgba(124, 92, 255, .2), rgba(110, 231, 255, .13));
+      filter: blur(16px);
+      transform: rotate(-12deg);
+    }
+
+    h1,
+    h2,
+    h3,
+    p {
+      margin: 0;
+    }
+
+    h1 {
+      max-width: 780px;
+      margin-top: 12px;
+      font-size: clamp(36px, 5vw, 64px);
+      line-height: .96;
+      letter-spacing: 0;
+    }
+
+    h2 {
+      font-size: 20px;
+      letter-spacing: 0;
+    }
+
+    h3 {
+      font-size: 16px;
+      letter-spacing: 0;
+    }
+
+    .hero p {
+      max-width: 660px;
+      margin-top: 14px;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .hero-actions {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .btn {
+      min-height: 44px;
+      border: 0;
+      border-radius: var(--radius-sm);
+      padding: 0 16px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 9px;
+      color: #fff;
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      box-shadow: 0 18px 42px rgba(124, 92, 255, .28);
+      transition: transform .22s var(--ease), box-shadow .22s var(--ease), filter .22s var(--ease);
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 24px 54px rgba(124, 92, 255, .34);
+      filter: saturate(1.08);
+    }
+
+    .btn.secondary {
+      background: rgba(255, 255, 255, .07);
+      border: 1px solid var(--line);
+      color: var(--text);
+      box-shadow: none;
+    }
+
+    .btn.danger {
+      background: linear-gradient(135deg, var(--danger), #ff7b72);
+      box-shadow: 0 18px 42px rgba(239, 68, 68, .2);
+    }
+
+    .mobile-tabs {
+      display: none;
+      gap: 8px;
+      overflow-x: auto;
+    }
+
+    .view {
+      display: none;
+    }
+
+    .view.active {
+      display: block;
+      animation: viewIn .34s var(--ease);
+    }
+
+    @keyframes viewIn {
+      from {
+        opacity: 0;
+        transform: translateY(8px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .bento {
+      display: grid;
+      grid-template-columns: minmax(0, 1.45fr) minmax(320px, .75fr);
+      grid-auto-rows: minmax(156px, auto);
+      gap: 18px;
+      align-items: start;
+    }
+
+    .panel {
+      position: relative;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      background: linear-gradient(145deg, var(--card), var(--card-3));
+      box-shadow: var(--shadow-soft);
+      backdrop-filter: blur(18px);
+    }
+
+    .panel::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      border-radius: inherit;
+      background: linear-gradient(145deg, rgba(255, 255, 255, .095), transparent 36%);
+      opacity: .7;
+    }
+
+    .panel-inner {
+      position: relative;
+      z-index: 1;
+      padding: 20px;
+    }
+
+    .tasks-panel {
+      min-height: 640px;
+    }
+
+    .panel-head,
+    .row,
+    .task-head,
+    .metric-top,
+    .stat-line {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+    }
+
+    .panel-head {
+      margin-bottom: 18px;
+    }
+
+    .toolbar {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 150px 138px;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .field {
+      display: grid;
+      gap: 8px;
+      margin-bottom: 13px;
+    }
+
+    label {
+      color: var(--faint);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    input,
+    textarea,
+    select {
+      width: 100%;
+      min-height: 44px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      background: rgba(13, 17, 23, .58);
+      outline: 0;
+      padding: 11px 13px;
+      transition: border-color .22s var(--ease), background .22s var(--ease), box-shadow .22s var(--ease);
+    }
+
+    textarea {
+      min-height: 118px;
+      resize: vertical;
+      line-height: 1.55;
+    }
+
+    input::placeholder,
+    textarea::placeholder {
+      color: rgba(156, 163, 175, .58);
+    }
+
+    input:focus,
+    textarea:focus,
+    select:focus {
+      border-color: rgba(110, 231, 255, .46);
+      background: rgba(13, 17, 23, .76);
+      box-shadow: 0 0 0 4px rgba(110, 231, 255, .08), 0 0 28px rgba(124, 92, 255, .12);
+    }
+
+    .task-list,
+    .users-list {
+      display: grid;
+      gap: 12px;
+    }
+
+    .task {
+      position: relative;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background:
+        linear-gradient(90deg, rgba(124, 92, 255, .24), transparent 2px),
+        linear-gradient(145deg, rgba(255, 255, 255, .065), rgba(255, 255, 255, .025));
+      transition: transform .24s var(--ease), border-color .24s var(--ease), box-shadow .24s var(--ease), background .24s var(--ease);
+    }
+
+    .task:hover {
+      transform: translateY(-3px);
+      border-color: rgba(124, 92, 255, .34);
+      box-shadow: 0 22px 48px rgba(0, 0, 0, .24), 0 0 30px rgba(124, 92, 255, .1);
+    }
+
+    .task.completed {
+      background:
+        linear-gradient(90deg, rgba(34, 197, 94, .34), transparent 2px),
+        linear-gradient(145deg, rgba(34, 197, 94, .08), rgba(255, 255, 255, .025));
+    }
+
+    .task-body {
+      padding: 16px;
+      display: grid;
+      gap: 14px;
+    }
+
+    .task-toggle {
+      min-width: 0;
+      border: 0;
+      background: transparent;
+      color: inherit;
+      padding: 0;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      text-align: left;
+    }
+
+    .check {
+      width: 25px;
+      height: 25px;
+      flex: 0 0 25px;
+      margin-top: 1px;
+      border-radius: 9px;
+      display: grid;
+      place-items: center;
+      color: transparent;
+      border: 1px solid rgba(255, 255, 255, .14);
+      background: rgba(13, 17, 23, .68);
+      transition: background .22s var(--ease), color .22s var(--ease), transform .22s var(--ease), border-color .22s var(--ease);
+    }
+
+    .completed .check {
+      color: #fff;
+      background: var(--success);
+      border-color: var(--success);
+      transform: scale(1.04);
+      box-shadow: 0 0 22px rgba(34, 197, 94, .22);
+    }
+
+    .task-title {
+      display: block;
+      font-size: 16px;
+      font-weight: 800;
+      overflow-wrap: anywhere;
+    }
+
+    .task-desc {
+      display: block;
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.52;
+      overflow-wrap: anywhere;
+    }
+
+    .task-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .icon-btn {
+      min-width: 42px;
+      background: rgba(255, 255, 255, .055);
+      border-color: var(--line);
+      color: var(--muted);
+    }
+
+    .meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      color: var(--faint);
+      font-size: 12px;
+    }
+
+    .pill {
+      min-height: 27px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 0 10px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255, 255, 255, .045);
+      color: var(--muted);
+    }
+
+    .pill.hot {
+      border-color: rgba(245, 158, 11, .28);
+      color: #fbbf24;
+      background: rgba(245, 158, 11, .08);
+    }
+
+    .pill.done {
+      border-color: rgba(34, 197, 94, .26);
+      color: #86efac;
+      background: rgba(34, 197, 94, .08);
+    }
+
+    .task-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .progress {
+      height: 9px;
+      border-radius: 999px;
+      overflow: hidden;
+      background: rgba(255, 255, 255, .07);
+    }
+
+    .progress span {
+      display: block;
+      height: 100%;
+      width: 0%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--accent), var(--accent-2), var(--accent-3));
+      box-shadow: 0 0 18px rgba(110, 231, 255, .28);
+      transition: width .8s var(--ease);
+    }
+
+    .right-stack {
+      display: grid;
+      gap: 18px;
+    }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .metric-card {
+      position: relative;
+      overflow: hidden;
+      min-height: 138px;
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: linear-gradient(145deg, rgba(255, 255, 255, .07), rgba(255, 255, 255, .025));
+    }
+
+    .metric-card::after {
+      content: "";
+      position: absolute;
+      right: -24px;
+      top: -24px;
+      width: 92px;
+      height: 92px;
+      border-radius: 50%;
+      background: rgba(124, 92, 255, .16);
+      filter: blur(4px);
+    }
+
+    .metric-value {
+      margin-top: 18px;
+      font-size: 34px;
+      line-height: 1;
+      font-weight: 900;
+    }
+
+    .spark {
+      height: 44px;
+      display: flex;
+      align-items: end;
+      gap: 5px;
+      margin-top: 16px;
+    }
+
+    .spark i {
+      flex: 1;
+      min-width: 5px;
+      border-radius: 999px 999px 4px 4px;
+      background: linear-gradient(var(--accent-3), var(--accent));
+      opacity: .78;
+      transform-origin: bottom;
+      animation: rise .75s var(--ease) both;
+    }
+
+    @keyframes rise {
+      from {
+        transform: scaleY(.2);
+        opacity: .25;
+      }
+    }
+
+    .form-grid {
+      display: grid;
+      gap: 12px;
+    }
+
+    .form-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 4px;
+    }
+
+    .user-row {
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255, 255, 255, .045);
+      display: grid;
+      gap: 12px;
+      transition: border-color .22s var(--ease), background .22s var(--ease), transform .22s var(--ease);
+    }
+
+    .user-row:hover {
+      transform: translateY(-2px);
+      border-color: rgba(110, 231, 255, .24);
+      background: rgba(255, 255, 255, .065);
+    }
+
+    .user-row.active {
+      border-color: rgba(124, 92, 255, .5);
+      box-shadow: 0 0 0 4px rgba(124, 92, 255, .1);
+    }
+
+    .user-main {
+      border: 0;
+      background: transparent;
+      color: inherit;
+      padding: 0;
+      text-align: left;
+      display: grid;
+      gap: 5px;
+    }
+
+    .empty {
+      min-height: 220px;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      padding: 28px;
+      border: 1px dashed rgba(255, 255, 255, .14);
+      border-radius: var(--radius);
+      color: var(--muted);
+      background: linear-gradient(145deg, rgba(255, 255, 255, .045), rgba(255, 255, 255, .02));
+    }
+
+    .empty strong {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--text);
+      font-size: 18px;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .stats-grid .metric-card {
+      min-height: 168px;
+    }
+
+    .insight-list {
+      display: grid;
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .insight {
+      padding: 14px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--line);
+      background: rgba(13, 17, 23, .48);
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+      color: var(--muted);
+    }
+
+    .toast {
+      position: fixed;
+      right: 24px;
+      bottom: 24px;
+      z-index: 50;
+      max-width: min(430px, calc(100vw - 48px));
+      padding: 14px 16px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      color: white;
+      background: rgba(17, 24, 39, .92);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(16px);
+      transform: translateY(18px);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .22s var(--ease), transform .22s var(--ease);
+    }
+
+    .toast.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    @media (max-width: 1180px) {
+      .app {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        position: relative;
+        top: 0;
+        height: auto;
+        min-height: 0;
+      }
+
+      .nav,
+      .sidebar-card,
+      .profile-switcher {
+        display: none;
+      }
+
+      .mobile-tabs {
+        display: flex;
+      }
+    }
+
+    @media (max-width: 980px) {
+      .bento,
+      .hero {
+        grid-template-columns: 1fr;
+      }
+
+      .hero-actions {
+        justify-content: flex-start;
+      }
+
+      .stats-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 680px) {
+      .app {
+        padding: 12px;
+        gap: 12px;
+      }
+
+      .hero,
+      .panel-inner {
+        padding: 16px;
+      }
+
+      h1 {
+        font-size: 36px;
+      }
+
+      .toolbar,
+      .metrics,
+      .stats-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .panel-head,
+      .task-head,
+      .task-footer,
+      .form-actions,
+      .hero-actions {
+        align-items: stretch;
+        flex-direction: column;
+      }
+
+      .btn,
+      .ghost,
+      .icon-btn {
+        width: 100%;
+      }
+    }
+  </style>
 </head>
 <body>
-    <h1>Hello World!</h1>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="logo">N</div>
+        <div>
+          <strong>Nil Todo</strong>
+          <span class="muted">Productivity OS</span>
+        </div>
+      </div>
+
+      <nav class="nav" aria-label="Dashboard navigation">
+        <button class="active" data-view-link="tasks">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M8 7h10M8 12h10M8 17h7M4 7h.01M4 12h.01M4 17h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          Tasks
+        </button>
+        <button data-view-link="users">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M16 19c0-2.2-1.8-4-4-4s-4 1.8-4 4M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM20 19c0-1.7-1-3.1-2.5-3.7M17 5.1a4 4 0 0 1 0 6.8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          Users
+        </button>
+        <button data-view-link="stats">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 19V5M8 19v-6M12 19V9M16 19v-3M20 19V7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          Insights
+        </button>
+      </nav>
+
+      <div class="sidebar-card">
+        <div class="eyebrow">Today focus</div>
+        <h3 style="margin-top:8px">Execution score</h3>
+        <p class="muted" style="margin-top:6px; line-height:1.5">Live completion rate for the active workspace.</p>
+        <div class="side-progress"><span id="sideProgress"></span></div>
+      </div>
+
+      <div class="profile-switcher">
+        <div class="user-menu" id="userSwitcherMenu" aria-label="Switch user"></div>
+        <button class="profile" id="profileSwitcher" type="button" aria-expanded="false" aria-controls="userSwitcherMenu">
+          <div class="avatar" id="avatar">N</div>
+          <div class="profile-copy">
+            <strong id="currentUserName">No user selected</strong>
+            <span id="currentUserPhone" class="muted">Create or select a user</span>
+          </div>
+        </button>
+      </div>
+    </aside>
+
+    <main class="main">
+      <section class="hero">
+        <div>
+          <div class="eyebrow">Premium task command center</div>
+          <h1>Plan, execute, and measure your day.</h1>
+          <p id="subtitle">A polished workspace for tasks, users, and completion insights powered by your Go backend.</p>
+        </div>
+        <div class="hero-actions">
+          <button class="btn secondary" id="reloadBtn">Refresh</button>
+          <button class="btn" data-view-link="users">Register user</button>
+        </div>
+      </section>
+
+      <div class="mobile-tabs" aria-label="Mobile navigation">
+        <button class="tab active" data-view-link="tasks">Tasks</button>
+        <button class="tab" data-view-link="users">Users</button>
+        <button class="tab" data-view-link="stats">Insights</button>
+      </div>
+
+      <section class="view active" id="view-tasks">
+        <div class="bento">
+          <section class="panel tasks-panel">
+            <div class="panel-inner">
+              <div class="panel-head">
+                <div>
+                  <div class="eyebrow">Workspace</div>
+                  <h2>Tasks</h2>
+                </div>
+                <button class="btn" id="newTaskBtn">New task</button>
+              </div>
+
+              <div class="toolbar">
+                <input id="searchInput" type="search" placeholder="Search tasks">
+                <select id="statusFilter" aria-label="Status filter">
+                  <option value="all">All status</option>
+                  <option value="open">Active</option>
+                  <option value="done">Completed</option>
+                </select>
+                <select id="sortSelect" aria-label="Sort tasks">
+                  <option value="new">Newest</option>
+                  <option value="old">Oldest</option>
+                  <option value="title">Title</option>
+                </select>
+              </div>
+
+              <div class="task-list" id="taskList"></div>
+            </div>
+          </section>
+
+          <aside class="right-stack">
+            <section class="panel">
+              <div class="panel-inner">
+                <div class="metrics">
+                  <div class="metric-card">
+                    <div class="metric-top">
+                      <span class="muted">Total</span>
+                      <span class="pill">Live</span>
+                    </div>
+                    <div class="metric-value" id="localTotal">0</div>
+                    <div class="spark" aria-hidden="true"><i style="height:24%"></i><i style="height:54%"></i><i style="height:38%"></i><i style="height:74%"></i><i style="height:62%"></i></div>
+                  </div>
+                  <div class="metric-card">
+                    <div class="metric-top">
+                      <span class="muted">Done</span>
+                      <span class="pill done">OK</span>
+                    </div>
+                    <div class="metric-value" id="localDone">0</div>
+                    <div class="progress"><span id="localProgress"></span></div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section class="panel">
+              <div class="panel-inner">
+                <div class="panel-head">
+                  <div>
+                    <div class="eyebrow">Composer</div>
+                    <h2 id="taskFormTitle">Create task</h2>
+                  </div>
+                </div>
+                <form id="taskForm" class="form-grid">
+                  <input type="hidden" id="taskId">
+                  <div class="field">
+                    <label for="taskTitle">Title</label>
+                    <input id="taskTitle" maxlength="100" required placeholder="Ship the next iteration">
+                  </div>
+                  <div class="field">
+                    <label for="taskDescription">Description</label>
+                    <textarea id="taskDescription" maxlength="1000" placeholder="Add useful context"></textarea>
+                  </div>
+                  <div class="field">
+                    <label for="taskCompleted">Status</label>
+                    <select id="taskCompleted">
+                      <option value="false">Active</option>
+                      <option value="true">Completed</option>
+                    </select>
+                  </div>
+                  <div class="form-actions">
+                    <button class="btn" type="submit">Save task</button>
+                    <button class="ghost" type="button" id="cancelTaskEdit">Reset</button>
+                  </div>
+                </form>
+              </div>
+            </section>
+          </aside>
+        </div>
+      </section>
+
+      <section class="view" id="view-users">
+        <div class="bento">
+          <section class="panel tasks-panel">
+            <div class="panel-inner">
+              <div class="panel-head">
+                <div>
+                  <div class="eyebrow">Identity</div>
+                  <h2>Users</h2>
+                </div>
+                <button class="btn secondary" id="clearCurrentUser">Show all tasks</button>
+              </div>
+              <div class="users-list" id="usersList"></div>
+            </div>
+          </section>
+
+          <aside class="right-stack">
+            <section class="panel">
+              <div class="panel-inner">
+                <div class="panel-head">
+                  <div>
+                    <div class="eyebrow">Registration</div>
+                    <h2 id="userFormTitle">Create user</h2>
+                  </div>
+                </div>
+                <form id="userForm" class="form-grid">
+                  <input type="hidden" id="userId">
+                  <div class="field">
+                    <label for="fullName">Full name</label>
+                    <input id="fullName" minlength="3" maxlength="100" required placeholder="Alex Morgan">
+                  </div>
+                  <div class="field">
+                    <label for="phoneNumber">Phone</label>
+                    <input id="phoneNumber" inputmode="tel" placeholder="+79991112233">
+                  </div>
+                  <div class="form-actions">
+                    <button class="btn" type="submit">Save user</button>
+                    <button class="ghost" type="button" id="cancelUserEdit">Reset</button>
+                  </div>
+                </form>
+              </div>
+            </section>
+          </aside>
+        </div>
+      </section>
+
+      <section class="view" id="view-stats">
+        <section class="panel">
+          <div class="panel-inner">
+            <div class="panel-head">
+              <div>
+                <div class="eyebrow">Backend insights</div>
+                <h2>Statistics</h2>
+              </div>
+              <button class="btn" id="loadStatsBtn">Update insights</button>
+            </div>
+
+            <div class="toolbar">
+              <input id="dateFrom" type="date" aria-label="From date">
+              <input id="dateTo" type="date" aria-label="To date">
+              <button class="ghost" id="clearDates" type="button">Clear dates</button>
+            </div>
+
+            <div class="stats-grid">
+              <div class="metric-card">
+                <span class="muted">Created</span>
+                <div class="metric-value" id="statCreated">0</div>
+                <div class="spark" aria-hidden="true"><i style="height:34%"></i><i style="height:66%"></i><i style="height:48%"></i><i style="height:82%"></i></div>
+              </div>
+              <div class="metric-card">
+                <span class="muted">Completed</span>
+                <div class="metric-value" id="statCompleted">0</div>
+                <div class="spark" aria-hidden="true"><i style="height:28%"></i><i style="height:44%"></i><i style="height:68%"></i><i style="height:88%"></i></div>
+              </div>
+              <div class="metric-card">
+                <span class="muted">Completion</span>
+                <div class="metric-value" id="statRate">0%</div>
+                <div class="progress"><span id="statRateBar"></span></div>
+              </div>
+              <div class="metric-card">
+                <span class="muted">Average time</span>
+                <div class="metric-value" id="statAvg" style="font-size:26px">-</div>
+                <span class="pill hot">Velocity</span>
+              </div>
+            </div>
+
+            <div class="insight-list">
+              <div class="insight"><span>Active user</span><strong id="statsUserLabel">All</strong></div>
+              <div class="insight"><span>Selected range</span><strong id="statsRangeLabel">All time</strong></div>
+            </div>
+          </div>
+        </section>
+      </section>
+    </main>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    const API_BASE = "/api/v1";
+    const state = {
+      users: [],
+      tasks: [],
+      selectedUserId: Number(localStorage.getItem("nilTodoUserId")) || null,
+      activeView: "tasks",
+      editingTaskId: null,
+      editingUserId: null,
+      userMenuOpen: false
+    };
+
+    const $ = (selector) => document.querySelector(selector);
+    const $$ = (selector) => Array.from(document.querySelectorAll(selector));
+    const els = {
+      currentUserName: $("#currentUserName"),
+      currentUserPhone: $("#currentUserPhone"),
+      avatar: $("#avatar"),
+      profileSwitcher: $("#profileSwitcher"),
+      userSwitcherMenu: $("#userSwitcherMenu"),
+      subtitle: $("#subtitle"),
+      sideProgress: $("#sideProgress"),
+      taskList: $("#taskList"),
+      usersList: $("#usersList"),
+      searchInput: $("#searchInput"),
+      statusFilter: $("#statusFilter"),
+      sortSelect: $("#sortSelect"),
+      taskForm: $("#taskForm"),
+      taskFormTitle: $("#taskFormTitle"),
+      taskTitle: $("#taskTitle"),
+      taskDescription: $("#taskDescription"),
+      taskCompleted: $("#taskCompleted"),
+      userForm: $("#userForm"),
+      userFormTitle: $("#userFormTitle"),
+      fullName: $("#fullName"),
+      phoneNumber: $("#phoneNumber"),
+      localTotal: $("#localTotal"),
+      localDone: $("#localDone"),
+      localProgress: $("#localProgress"),
+      dateFrom: $("#dateFrom"),
+      dateTo: $("#dateTo"),
+      statCreated: $("#statCreated"),
+      statCompleted: $("#statCompleted"),
+      statRate: $("#statRate"),
+      statRateBar: $("#statRateBar"),
+      statAvg: $("#statAvg"),
+      statsUserLabel: $("#statsUserLabel"),
+      statsRangeLabel: $("#statsRangeLabel"),
+      toast: $("#toast")
+    };
+
+    function selectedUser() {
+      return state.users.find((user) => user.id === state.selectedUserId) || null;
+    }
+
+    function params(query) {
+      const search = new URLSearchParams();
+      Object.entries(query).forEach(([key, value]) => {
+        if (value !== null && value !== undefined && value !== "") search.set(key, value);
+      });
+      const value = search.toString();
+      return value ? `?${value}` : "";
+    }
+
+    async function api(path, options = {}) {
+      const response = await fetch(`${API_BASE}${path}`, {
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+          ...(options.headers || {})
+        },
+        ...options
+      });
+
+      if (response.status === 204) return null;
+
+      const text = await response.text();
+      let data = null;
+      if (text) {
+        try {
+          data = JSON.parse(text);
+        } catch {
+          throw new Error(`Server returned non-JSON for ${path}. Check the API route.`);
+        }
+      }
+
+      if (!response.ok) {
+        throw new Error(data?.message || data?.error || `HTTP ${response.status}`);
+      }
+
+      return data;
+    }
+
+    function toast(message, isError = false) {
+      els.toast.textContent = message;
+      els.toast.style.borderColor = isError ? "rgba(239,68,68,.38)" : "rgba(110,231,255,.24)";
+      els.toast.style.background = isError ? "rgba(69, 20, 28, .94)" : "rgba(17,24,39,.94)";
+      els.toast.classList.add("show");
+      window.clearTimeout(toast.timer);
+      toast.timer = window.setTimeout(() => els.toast.classList.remove("show"), 3200);
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function formatDate(value) {
+      if (!value) return "-";
+      return new Intl.DateTimeFormat("en", { day: "2-digit", month: "short", year: "numeric" }).format(new Date(value));
+    }
+
+    function initials(name) {
+      return String(name || "N").trim().slice(0, 1).toUpperCase();
+    }
+
+    function setView(view) {
+      state.activeView = view;
+      $$(".view").forEach((node) => node.classList.toggle("active", node.id === `view-${view}`));
+      $$("[data-view-link]").forEach((node) => node.classList.toggle("active", node.dataset.viewLink === view));
+    }
+
+    function renderUserContext() {
+      const user = selectedUser();
+      els.currentUserName.textContent = user ? user.full_name : "No user selected";
+      els.currentUserPhone.textContent = user?.phone_number || "Create or select a user";
+      els.avatar.textContent = initials(user?.full_name);
+      els.subtitle.textContent = user
+        ? `${user.full_name} is active. New tasks will be assigned to this workspace user.`
+        : "Select or register a user to create tasks, or keep the dashboard in all-tasks mode.";
+      els.statsUserLabel.textContent = user ? user.full_name : "All";
+    }
+
+    function renderUserSwitcher() {
+      if (!state.users.length) {
+        els.userSwitcherMenu.innerHTML = `
+          <div class="user-menu-empty">
+            No users yet. Open Users and register the first workspace member.
+          </div>`;
+        return;
+      }
+
+      const allTasksButton = `
+        <button class="switch-user ${state.selectedUserId ? "" : "active"}" type="button" data-action="switch-user" data-id="">
+          <span class="switch-user-avatar">All</span>
+          <span>
+            <strong>All tasks</strong>
+            <span>No user filter</span>
+          </span>
+        </button>`;
+
+      const userButtons = state.users.map((user) => `
+        <button class="switch-user ${user.id === state.selectedUserId ? "active" : ""}" type="button" data-action="switch-user" data-id="${user.id}">
+          <span class="switch-user-avatar">${escapeHtml(initials(user.full_name))}</span>
+          <span>
+            <strong>${escapeHtml(user.full_name)}</strong>
+            <span>${escapeHtml(user.phone_number || "No phone")} · ID ${user.id}</span>
+          </span>
+        </button>
+      `).join("");
+
+      els.userSwitcherMenu.innerHTML = allTasksButton + userButtons;
+    }
+
+    function setUserMenu(open) {
+      state.userMenuOpen = open;
+      els.profileSwitcher.setAttribute("aria-expanded", String(open));
+      els.userSwitcherMenu.classList.toggle("open", open);
+    }
+
+    async function selectUser(id) {
+      state.selectedUserId = id || null;
+
+      if (state.selectedUserId) {
+        localStorage.setItem("nilTodoUserId", String(state.selectedUserId));
+      } else {
+        localStorage.removeItem("nilTodoUserId");
+      }
+
+      renderUsers();
+      renderUserSwitcher();
+      setUserMenu(false);
+      await loadTasks();
+      await loadStats();
+
+      const user = selectedUser();
+      toast(user ? `${user.full_name} selected.` : "User filter cleared.");
+    }
+
+    function filteredTasks() {
+      const query = els.searchInput.value.trim().toLowerCase();
+      const status = els.statusFilter.value;
+      const sort = els.sortSelect.value;
+
+      return state.tasks
+        .filter((task) => {
+          const text = `${task.title} ${task.description || ""}`.toLowerCase();
+          const matchesText = !query || text.includes(query);
+          const matchesStatus =
+            status === "all" ||
+            (status === "open" && !task.completed) ||
+            (status === "done" && task.completed);
+          return matchesText && matchesStatus;
+        })
+        .sort((a, b) => {
+          if (sort === "old") return new Date(a.created_at) - new Date(b.created_at);
+          if (sort === "title") return a.title.localeCompare(b.title);
+          return new Date(b.created_at) - new Date(a.created_at);
+        });
+    }
+
+    function renderTasks() {
+      const tasks = filteredTasks();
+      const total = state.tasks.length;
+      const done = state.tasks.filter((task) => task.completed).length;
+      const percent = total ? Math.round((done / total) * 100) : 0;
+
+      els.localTotal.textContent = total;
+      els.localDone.textContent = done;
+      els.localProgress.style.width = `${percent}%`;
+      els.sideProgress.style.width = `${percent}%`;
+
+      if (!tasks.length) {
+        els.taskList.innerHTML = `
+          <div class="empty">
+            <div>
+              <strong>No tasks in view</strong>
+              <span>Create a task or adjust filters to bring the workspace back to life.</span>
+            </div>
+          </div>`;
+        return;
+      }
+
+      els.taskList.innerHTML = tasks.map((task) => {
+        const priority = task.completed ? "done" : new Date(task.created_at) < new Date(Date.now() - 86400000 * 3) ? "hot" : "";
+        const priorityText = task.completed ? "Completed" : priority ? "Aging" : "Active";
+
+        return `
+          <article class="task ${task.completed ? "completed" : ""}">
+            <div class="task-body">
+              <div class="task-head">
+                <button class="task-toggle" type="button" data-action="toggle-task" data-id="${task.id}">
+                  <span class="check">${task.completed ? "✓" : ""}</span>
+                  <span>
+                    <span class="task-title">${escapeHtml(task.title)}</span>
+                    <span class="task-desc">${escapeHtml(task.description || "No description")}</span>
+                  </span>
+                </button>
+                <div class="task-actions">
+                  <button class="icon-btn" type="button" data-action="edit-task" data-id="${task.id}" title="Edit">Edit</button>
+                  <button class="icon-btn" type="button" data-action="delete-task" data-id="${task.id}" title="Delete">Delete</button>
+                </div>
+              </div>
+              <div class="task-footer">
+                <div class="meta">
+                  <span class="pill ${priority}">${priorityText}</span>
+                  <span class="pill">Author ${task.author_user_id}</span>
+                  <span class="pill">Created ${formatDate(task.created_at)}</span>
+                  ${task.completed_at ? `<span class="pill done">Done ${formatDate(task.completed_at)}</span>` : ""}
+                </div>
+              </div>
+            </div>
+          </article>`;
+      }).join("");
+    }
+
+    function renderUsers() {
+      renderUserContext();
+      renderUserSwitcher();
+
+      if (!state.users.length) {
+        els.usersList.innerHTML = `
+          <div class="empty">
+            <div>
+              <strong>No users yet</strong>
+              <span>Register the first user to unlock task creation.</span>
+            </div>
+          </div>`;
+        return;
+      }
+
+      els.usersList.innerHTML = state.users.map((user) => `
+        <article class="user-row ${user.id === state.selectedUserId ? "active" : ""}">
+          <button class="user-main" type="button" data-action="select-user" data-id="${user.id}">
+            <strong>${escapeHtml(user.full_name)}</strong>
+            <span class="muted">${escapeHtml(user.phone_number || "No phone")} · ID ${user.id}</span>
+          </button>
+          <div class="task-actions">
+            <button class="icon-btn" type="button" data-action="edit-user" data-id="${user.id}">Edit</button>
+            <button class="icon-btn" type="button" data-action="delete-user" data-id="${user.id}">Delete</button>
+          </div>
+        </article>
+      `).join("");
+    }
+
+    function resetTaskForm() {
+      state.editingTaskId = null;
+      els.taskForm.reset();
+      els.taskCompleted.value = "false";
+      els.taskFormTitle.textContent = "Create task";
+    }
+
+    function resetUserForm() {
+      state.editingUserId = null;
+      els.userForm.reset();
+      els.userFormTitle.textContent = "Create user";
+    }
+
+    async function loadUsers() {
+      state.users = await api(`/users${params({ limit: 100, offset: 0 })}`);
+      if (state.selectedUserId && !selectedUser()) {
+        state.selectedUserId = null;
+        localStorage.removeItem("nilTodoUserId");
+      }
+      renderUsers();
+    }
+
+    async function loadTasks() {
+      state.tasks = await api(`/tasks${params({ user_id: state.selectedUserId, limit: 200, offset: 0 })}`);
+      renderTasks();
+    }
+
+    async function loadStats() {
+      const data = await api(`/statistics${params({
+        user_id: state.selectedUserId,
+        from: els.dateFrom.value,
+        to: els.dateTo.value
+      })}`);
+      const rate = data.tasks_completed_rate == null ? 0 : Math.round(Number(data.tasks_completed_rate));
+      els.statCreated.textContent = data.tasks_created ?? 0;
+      els.statCompleted.textContent = data.tasks_completed ?? 0;
+      els.statRate.textContent = `${rate}%`;
+      els.statRateBar.style.width = `${Math.max(0, Math.min(100, rate))}%`;
+      els.statAvg.textContent = data.tasks_average_completion_time || "-";
+      els.statsRangeLabel.textContent = els.dateFrom.value || els.dateTo.value
+        ? `${els.dateFrom.value || "start"} - ${els.dateTo.value || "now"}`
+        : "All time";
+      renderUserContext();
+    }
+
+    async function refreshAll() {
+      try {
+        await loadUsers();
+        await loadTasks();
+        await loadStats();
+      } catch (error) {
+        toast(error.message, true);
+      }
+    }
+
+    async function saveTask(event) {
+      event.preventDefault();
+      if (!state.selectedUserId && !state.editingTaskId) {
+        setView("users");
+        toast("Select or create a user first.", true);
+        return;
+      }
+
+      const title = els.taskTitle.value.trim();
+      const description = els.taskDescription.value.trim();
+      const completed = els.taskCompleted.value === "true";
+
+      try {
+        if (state.editingTaskId) {
+          await api(`/tasks/${state.editingTaskId}`, {
+            method: "PATCH",
+            body: JSON.stringify({ title, description: description || null, completed })
+          });
+          toast("Task updated.");
+        } else {
+          await api("/tasks", {
+            method: "POST",
+            body: JSON.stringify({ title, description: description || null, author_user_id: state.selectedUserId })
+          });
+          toast("Task created.");
+        }
+        resetTaskForm();
+        await loadTasks();
+        await loadStats();
+      } catch (error) {
+        toast(error.message, true);
+      }
+    }
+
+    async function saveUser(event) {
+      event.preventDefault();
+      const fullName = els.fullName.value.trim();
+      const phoneNumber = els.phoneNumber.value.trim();
+      const payload = { full_name: fullName, phone_number: phoneNumber || null };
+
+      try {
+        const user = state.editingUserId
+          ? await api(`/users/${state.editingUserId}`, { method: "PATCH", body: JSON.stringify(payload) })
+          : await api("/users", { method: "POST", body: JSON.stringify(payload) });
+
+        state.selectedUserId = user.id;
+        localStorage.setItem("nilTodoUserId", String(user.id));
+        toast(state.editingUserId ? "User updated." : "User registered.");
+        resetUserForm();
+        await loadUsers();
+        await loadTasks();
+        await loadStats();
+      } catch (error) {
+        toast(error.message, true);
+      }
+    }
+
+    function editTask(id) {
+      const task = state.tasks.find((item) => item.id === id);
+      if (!task) return;
+      state.editingTaskId = id;
+      els.taskFormTitle.textContent = `Edit task #${id}`;
+      els.taskTitle.value = task.title;
+      els.taskDescription.value = task.description || "";
+      els.taskCompleted.value = String(Boolean(task.completed));
+      setView("tasks");
+      els.taskTitle.focus();
+    }
+
+    function editUser(id) {
+      const user = state.users.find((item) => item.id === id);
+      if (!user) return;
+      state.editingUserId = id;
+      els.userFormTitle.textContent = `Edit user #${id}`;
+      els.fullName.value = user.full_name;
+      els.phoneNumber.value = user.phone_number || "";
+      setView("users");
+      els.fullName.focus();
+    }
+
+    async function handleTaskAction(action, id) {
+      const task = state.tasks.find((item) => item.id === id);
+      if (!task) return;
+
+      try {
+        if (action === "toggle-task") {
+          await api(`/tasks/${id}`, { method: "PATCH", body: JSON.stringify({ completed: !task.completed }) });
+          toast(!task.completed ? "Task completed." : "Task reopened.");
+        }
+
+        if (action === "delete-task") {
+          if (!confirm(`Delete "${task.title}"?`)) return;
+          await api(`/tasks/${id}`, { method: "DELETE" });
+          if (state.editingTaskId === id) resetTaskForm();
+          toast("Task deleted.");
+        }
+
+        await loadTasks();
+        await loadStats();
+      } catch (error) {
+        toast(error.message, true);
+      }
+    }
+
+    async function handleUserAction(action, id) {
+      const user = state.users.find((item) => item.id === id);
+      if (!user) return;
+
+      if (action === "select-user") {
+        await selectUser(id);
+        return;
+      }
+
+      if (action === "delete-user") {
+        if (!confirm(`Delete user "${user.full_name}"?`)) return;
+        try {
+          await api(`/users/${id}`, { method: "DELETE" });
+          if (state.selectedUserId === id) {
+            state.selectedUserId = null;
+            localStorage.removeItem("nilTodoUserId");
+          }
+          resetUserForm();
+          toast("User deleted.");
+          await loadUsers();
+          await loadTasks();
+          await loadStats();
+        } catch (error) {
+          toast(error.message, true);
+        }
+      }
+    }
+
+    document.addEventListener("click", async (event) => {
+      const profileSwitcher = event.target.closest("#profileSwitcher");
+      if (profileSwitcher) {
+        setUserMenu(!state.userMenuOpen);
+        return;
+      }
+
+      const viewLink = event.target.closest("[data-view-link]");
+      if (viewLink) {
+        setView(viewLink.dataset.viewLink);
+        setUserMenu(false);
+        return;
+      }
+
+      const actionNode = event.target.closest("[data-action]");
+      if (!actionNode) {
+        if (!event.target.closest("#userSwitcherMenu")) setUserMenu(false);
+        return;
+      }
+
+      const action = actionNode.dataset.action;
+      const id = Number(actionNode.dataset.id);
+
+      if (action === "switch-user") {
+        await selectUser(id || null);
+        return;
+      }
+
+      if (action === "edit-task") editTask(id);
+      if (action === "toggle-task" || action === "delete-task") await handleTaskAction(action, id);
+      if (action === "edit-user") editUser(id);
+      if (action === "select-user" || action === "delete-user") await handleUserAction(action, id);
+    });
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") setUserMenu(false);
+    });
+
+    els.taskForm.addEventListener("submit", saveTask);
+    els.userForm.addEventListener("submit", saveUser);
+    els.searchInput.addEventListener("input", renderTasks);
+    els.statusFilter.addEventListener("change", renderTasks);
+    els.sortSelect.addEventListener("change", renderTasks);
+    $("#reloadBtn").addEventListener("click", refreshAll);
+    $("#newTaskBtn").addEventListener("click", () => {
+      resetTaskForm();
+      els.taskTitle.focus();
+    });
+    $("#cancelTaskEdit").addEventListener("click", resetTaskForm);
+    $("#cancelUserEdit").addEventListener("click", resetUserForm);
+    $("#clearCurrentUser").addEventListener("click", async () => {
+      resetUserForm();
+      await selectUser(null);
+    });
+    $("#loadStatsBtn").addEventListener("click", async () => {
+      try {
+        await loadStats();
+        toast("Insights updated.");
+      } catch (error) {
+        toast(error.message, true);
+      }
+    });
+    $("#clearDates").addEventListener("click", async () => {
+      els.dateFrom.value = "";
+      els.dateTo.value = "";
+      await loadStats();
+    });
+
+    refreshAll();
+  </script>
 </body>
 </html>
